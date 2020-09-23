@@ -1,0 +1,70 @@
+\hypertarget{novel_clean_8h}{}\doxysection{D\+:/\+Development/visual\+\_\+studio\+\_\+repos/mipt\+\_\+1st\+\_\+year/onegin/src/novel\+Clean.h File Reference}
+\label{novel_clean_8h}\index{D:/Development/visual\_studio\_repos/mipt\_1st\_year/onegin/src/novelClean.h@{D:/Development/visual\_studio\_repos/mipt\_1st\_year/onegin/src/novelClean.h}}
+{\ttfamily \#include \char`\"{}io\+Lib.\+h\char`\"{}}\newline
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{novel_clean_8h_a820cab2aeedda71089352f7423319ef6}{skip\+Line}} (unsigned char $\ast$$\ast$current\+Symbol)
+\item 
+size\+\_\+t \mbox{\hyperlink{novel_clean_8h_a2321c572ce73fb2441b04180f4b42533}{clean\+Novel}} (unsigned char $\ast$input\+File\+Buffer, size\+\_\+t input\+File\+Size, unsigned char $\ast$output\+Buffer)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+constexpr const char $\ast$ \mbox{\hyperlink{novel_clean_8h_a430ad55f1ea87907fe15472daf09786d}{C\+H\+A\+P\+T\+E\+R\+\_\+\+C\+O\+D\+E\+\_\+\+W\+O\+RD}} = \char`\"{}Глава \char`\"{}
+\item 
+constexpr size\+\_\+t \mbox{\hyperlink{novel_clean_8h_a3be5b05b1c996525f10f3b2820c3f62c}{M\+A\+X\+\_\+\+L\+I\+N\+E\+\_\+\+L\+E\+N\+G\+TH}} = 128
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{novel_clean_8h_a2321c572ce73fb2441b04180f4b42533}\label{novel_clean_8h_a2321c572ce73fb2441b04180f4b42533}} 
+\index{novelClean.h@{novelClean.h}!cleanNovel@{cleanNovel}}
+\index{cleanNovel@{cleanNovel}!novelClean.h@{novelClean.h}}
+\doxysubsubsection{\texorpdfstring{cleanNovel()}{cleanNovel()}}
+{\footnotesize\ttfamily size\+\_\+t clean\+Novel (\begin{DoxyParamCaption}\item[{unsigned char $\ast$}]{input\+File\+Buffer,  }\item[{size\+\_\+t}]{input\+File\+Size,  }\item[{unsigned char $\ast$}]{output\+Buffer }\end{DoxyParamCaption})}
+
+Cleans novel of garbage. Skips lines that don\textquotesingle{}t contain any cyrilic letters and lines \char`\"{}Глава ...\char`\"{}.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em input\+File\+Buffer} & ~\newline
+ \\
+\hline
+\mbox{\texttt{ in}}  & {\em input\+File\+Size} & \\
+\hline
+\mbox{\texttt{ out}}  & {\em output\+Buffer} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+number of characters in output\+Buffer. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{novel_clean_8h_a820cab2aeedda71089352f7423319ef6}\label{novel_clean_8h_a820cab2aeedda71089352f7423319ef6}} 
+\index{novelClean.h@{novelClean.h}!skipLine@{skipLine}}
+\index{skipLine@{skipLine}!novelClean.h@{novelClean.h}}
+\doxysubsubsection{\texorpdfstring{skipLine()}{skipLine()}}
+{\footnotesize\ttfamily void skip\+Line (\begin{DoxyParamCaption}\item[{unsigned char $\ast$$\ast$}]{current\+Symbol }\end{DoxyParamCaption})}
+
+Moves current\+Symbol pointer to the first character of the next line.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ out}}  & {\em current\+Symbol} & ~\newline
+ \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{novel_clean_8h_a430ad55f1ea87907fe15472daf09786d}\label{novel_clean_8h_a430ad55f1ea87907fe15472daf09786d}} 
+\index{novelClean.h@{novelClean.h}!CHAPTER\_CODE\_WORD@{CHAPTER\_CODE\_WORD}}
+\index{CHAPTER\_CODE\_WORD@{CHAPTER\_CODE\_WORD}!novelClean.h@{novelClean.h}}
+\doxysubsubsection{\texorpdfstring{CHAPTER\_CODE\_WORD}{CHAPTER\_CODE\_WORD}}
+{\footnotesize\ttfamily constexpr const char$\ast$ C\+H\+A\+P\+T\+E\+R\+\_\+\+C\+O\+D\+E\+\_\+\+W\+O\+RD = \char`\"{}Глава \char`\"{}\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{novel_clean_8h_a3be5b05b1c996525f10f3b2820c3f62c}\label{novel_clean_8h_a3be5b05b1c996525f10f3b2820c3f62c}} 
+\index{novelClean.h@{novelClean.h}!MAX\_LINE\_LENGTH@{MAX\_LINE\_LENGTH}}
+\index{MAX\_LINE\_LENGTH@{MAX\_LINE\_LENGTH}!novelClean.h@{novelClean.h}}
+\doxysubsubsection{\texorpdfstring{MAX\_LINE\_LENGTH}{MAX\_LINE\_LENGTH}}
+{\footnotesize\ttfamily constexpr size\+\_\+t M\+A\+X\+\_\+\+L\+I\+N\+E\+\_\+\+L\+E\+N\+G\+TH = 128\hspace{0.3cm}{\ttfamily [constexpr]}}
+
