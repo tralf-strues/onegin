@@ -1,6 +1,6 @@
-#include "novelClean.h"
-
 #include<stdlib.h>
+
+#include "novelClean.h"
 
 //-----------------------------------------------------------------------------
 //! Moves currentSymbol pointer to the first character of the next line. 
@@ -37,7 +37,7 @@ size_t cleanNovel(unsigned char* inputFileBuffer, size_t inputFileSize, unsigned
     unsigned char* currentLineStart           = outputBuffer;
     unsigned char* versePointer               = NULL;
     unsigned char* newLinePointer             = NULL;
-    while (currentSymbol - inputFileBuffer < inputFileSize)
+    while ((size_t) (currentSymbol - inputFileBuffer) < inputFileSize)
     {
         isThereCyrilicLetterInLine = 0;
         currentLineStart           = currentSymbol;

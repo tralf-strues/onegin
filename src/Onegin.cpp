@@ -1,13 +1,13 @@
-#include "ioLib.h"
-#include "novelClean.h"
-#include "novelSort.h"
-#include "unitTests.h"
-
 #include <stdlib.h>
 #include <ctype.h>
 #include <assert.h>
 #include <sys/stat.h>
 #include <locale.h>
+
+#include "ioLib.h"
+#include "novelClean.h"
+#include "novelSort.h"
+#include "unitTests.h"
 
 constexpr const char* INPUT_DEFAULT_FILENAME  = "res/onegin_raw_input.txt";
 constexpr const char* OUTPUT_DEFAULT_FILENAME = "res/onegin_output.txt";
@@ -27,13 +27,13 @@ char getOption(char first, char last)
     assert(first < last);
 
     consoleWriteFormatted("  Choose an option (%c-%c): ", first, last);
-    char option = consoleNextChar();
+    char option = (char) consoleNextChar();
 
     while(option < first || option > last)
     {
         consoleWriteFormatted("  Incorrect input. Please enter a number from %c to %c: ", first, last);
         consoleMoveToNextLine();
-        option = consoleNextChar();
+        option = (char) consoleNextChar();
     }
 
     consoleMoveToNextLine();
@@ -218,7 +218,7 @@ void dialogMain(bool printOriginal)
 
     struct stat inputFileStat;
     stat((char*)inputFileName, &inputFileStat);
-    size_t inputFileSize = inputFileStat.st_size;
+    size_t inputFileSize = (size_t) inputFileStat.st_size;
 
     unsigned char* inputFileBuffer = (unsigned char*) calloc(inputFileSize, sizeof(unsigned char));
     unsigned char* stringBuffer    = (unsigned char*) calloc(inputFileSize, sizeof(unsigned char));

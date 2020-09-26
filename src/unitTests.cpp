@@ -1,9 +1,9 @@
+#include <assert.h>
+
 #include "ioLib.h"
 #include "novelClean.h"
 #include "novelSort.h"
 #include "unitTests.h"
-
-#include <assert.h>
 
 static const size_t TITLE_MESSAGE_LENGTH = 49;
 

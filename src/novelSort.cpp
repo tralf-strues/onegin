@@ -1,7 +1,7 @@
+#include <assert.h>
+
 #include "ioLib.h"
 #include "novelSort.h"
-
-#include <assert.h>
 
 //-----------------------------------------------------------------------------
 //! Swaps two values of size valueSize with each other.
@@ -39,7 +39,7 @@ size_t qsortPartition(void* values, size_t left, size_t right, size_t valueSize,
 {
     size_t indexOfResultPivot = left;
     void* pivot = (char*)values + right * valueSize;
-    for (int i = left; i < right; i++)
+    for (size_t i = left; i < right; i++)
     {
         if (compare(((char*)values + i * valueSize), pivot) < 0)
         {
