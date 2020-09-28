@@ -9,9 +9,84 @@
 #include "novelSort.h"
 #include "unitTests.h"
 
+enum TestingMode
+{
+    DISABLED,
+    ENABLED
+};
+
 constexpr const char* INPUT_DEFAULT_FILENAME  = "res/onegin_raw_input.txt";
 constexpr const char* OUTPUT_DEFAULT_FILENAME = "res/onegin_output.txt";
 constexpr size_t      TITLE_MESSAGE_LENGTH    = 100;
+
+void dialogStart();
+char getOption(char first, char last);
+void dialogMain(bool printOriginal);
+int requestTwoFilenames(const char* message1,         const char* message2, 
+                        const char* defaultFilename1, const char* defaultFilename2,
+                        char**      filename1,        char**      filename2);
+void writeTitleMessage(File* outputFile, const char* message);
+void printStringBuffer(File* outputFile, string* strIndex, size_t numberOfLines);
+void initializeStrIndex(string* strIndex, unsigned char* stringBuffer,  size_t stringBufferSize);
+void sort(string* strIndex, size_t numberOfLines, File* outputFile, 
+          int (*compare)(const void* value1, const void* value2),
+          const char* message, int useDefaultQSort);
+
+int main(int argc, char* argv[])
+{
+    setlocale(LC_ALL, "Russian");
+
+    TestingMode testingMode = DISABLED;
+
+    for (size_t i = 0; i < argc; i++)
+        if (strCompare((const unsigned char*)argv[i], (const unsigned char*)"-t") == 0)
+            testingMode = ENABLED;
+
+    if (testingMode == ENABLED)
+        testAll();
+    else
+        dialogStart();
+
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
+//! Starts the 'user interface'
+//-----------------------------------------------------------------------------
+void dialogStart()
+{
+    consoleWriteFormatted("\n=================================================\n"
+                          "             What do you want to do?             \n"
+                          "  [0] generate an alphabetically and a reversly  \n"
+                          "      sorted novels                              \n"
+                          "  [1] generate an alphabetically and a reversly  \n"
+                          "      sorted novels + print the original novel   \n"
+                          "  [2] test program                               \n"
+                          "  [3] EXIT                                       \n"
+                          "=================================================\n"
+                          "=================================================\n\n");
+
+    char mode = getOption('0', '3');
+    switch(mode)
+    {
+        case '0':
+        dialogMain(0);
+        break;
+
+        case '1':
+        dialogMain(1);
+        break;
+
+        case '2':
+        testAll();
+        dialogStart();
+        break;
+
+        default:
+        return;
+        break;
+    }
+}
 
 //-----------------------------------------------------------------------------
 //! Asks to choose an option from first to last from the user (e.g. '0'-'3').
@@ -42,6 +117,75 @@ char getOption(char first, char last)
 }
 
 //-----------------------------------------------------------------------------
+//! Main dialog. If printOriginal == 0, then doesn't print original raw novel,
+//! otherwise prints it.
+//!
+//! @param [in]  printOriginal
+//-----------------------------------------------------------------------------
+void dialogMain(bool printOriginal)
+{
+    char* inputFileName  = (char*) calloc(MAX_LINE_LENGTH, sizeof(char));
+    char* outputFileName = (char*) calloc(MAX_LINE_LENGTH, sizeof(char));
+
+    requestTwoFilenames("\n~What file do you want to clean?\n", "\n~Into what file to write output?\n",
+                        INPUT_DEFAULT_FILENAME,                 OUTPUT_DEFAULT_FILENAME,
+                        &inputFileName,                         &outputFileName);
+
+    File* inputFile  = openFile(inputFileName,  'r');
+    File* outputFile = openFile(outputFileName, 'w');
+    assert(inputFile  != NULL);
+    assert(outputFile != NULL);
+
+    struct stat inputFileStat = {};
+    stat((char*)inputFileName, &inputFileStat);
+    size_t inputFileSize = (size_t) inputFileStat.st_size;
+
+    unsigned char* inputFileBuffer = (unsigned char*) calloc(inputFileSize, sizeof(unsigned char));
+    unsigned char* stringBuffer    = (unsigned char*) calloc(inputFileSize, sizeof(unsigned char));
+    assert(readBufferFromFile(inputFile, sizeof(unsigned char), inputFileSize, inputFileBuffer) != FILE_END);
+    assert(inputFileBuffer != NULL && stringBuffer != NULL);
+
+    closeFile(inputFile);
+    if (inputFileName  != INPUT_DEFAULT_FILENAME)
+        free(inputFileName);
+
+    // printing original novel
+    if (printOriginal)
+    {
+        writeTitleMessage(outputFile, "Original novel");
+        writeBufferToFile(outputFile, sizeof(char), inputFileSize, inputFileBuffer);
+    }
+
+    size_t stringBufferSize = cleanNovel         (inputFileBuffer, inputFileSize, stringBuffer);
+    size_t numberOfLines    = strNumOfOccurrences((const char*) stringBuffer, '\n');
+
+    // initializing strIndex
+    string* strIndex = (string*) calloc(numberOfLines, sizeof(string));
+    assert(strIndex != NULL);
+    initializeStrIndex(strIndex, stringBuffer, stringBufferSize);
+
+    writeTitleMessage(outputFile, "Cleaned novel");
+    printStringBuffer(outputFile, strIndex, numberOfLines);
+
+    sort(strIndex, numberOfLines, outputFile, 
+        (int (*)(const void*, const void*)) &strCmpForSortAlphabetically, 
+         "Alphabetically sorted novel", 0);
+    sort(strIndex, numberOfLines, outputFile, 
+        (int (*)(const void*, const void*)) &strCmpForSortReversely, 
+         "Reversely sorted novel", 1);
+
+    closeFile(outputFile);
+
+    consoleWriteFormatted("\nEverything has been successfully generated!\n");
+
+    if (outputFileName != OUTPUT_DEFAULT_FILENAME)
+        free(outputFileName);
+
+    free(inputFileBuffer);
+    free(stringBuffer);
+}
+
+//-----------------------------------------------------------------------------
 //! Asks user to enter two filenames.
 //!
 //! @param [in]   message1  
@@ -61,11 +205,11 @@ int requestTwoFilenames(const char* message1,         const char* message2,
         defaultFilename1 == NULL || defaultFilename2 == NULL ||
         filename1        == NULL || filename2        == NULL)
         return -1;
-    
+
     // choosing file 1
-    consoleWriteFormatted("%s", message1);
-    consoleWriteFormatted("  [0] default: \"%s\"\n", defaultFilename1);
-    consoleWriteFormatted("  [1] custom\n");
+    consoleWriteFormatted("%s"
+                          "  [0] default: \"%s\"\n"
+                          "  [1] custom\n", message1, defaultFilename1);
     char optionFile1 = getOption('0', '1');
     if (optionFile1 == '1')
     {
@@ -75,9 +219,9 @@ int requestTwoFilenames(const char* message1,         const char* message2,
     }
 
     // choosing file 2
-    consoleWriteFormatted("%s", message2);
-    consoleWriteFormatted("  [0] default: \"%s\"\n", defaultFilename2);
-    consoleWriteFormatted("  [1] custom\n");
+    consoleWriteFormatted("%s"
+                          "  [0] default: \"%s\"\n"
+                          "  [1] custom\n", message2, defaultFilename2);
     char optionFile2 = getOption('0', '1');
     if (optionFile2 == '1')
     {
@@ -104,20 +248,26 @@ void writeTitleMessage(File* outputFile, const char* message)
     assert(message    != NULL);
     
     size_t length = strLength(message);
+
+    char* barLine = (char*) calloc(TITLE_MESSAGE_LENGTH + 4, sizeof(char)); // 4 = 3x'\n' + 1x'\0'
+    assert(barLine != NULL);
     
-    writeChar(outputFile, '\n');
-    for (size_t i = 0; i < TITLE_MESSAGE_LENGTH; i++)
-        writeChar(outputFile, '=');
-    writeChar(outputFile, '\n');
+    barLine[0] = '\n';
+    for (size_t i = 1; i <= TITLE_MESSAGE_LENGTH; i++)
+        barLine[i] = '=';
+    barLine[TITLE_MESSAGE_LENGTH + 1] = '\n';
+    barLine[TITLE_MESSAGE_LENGTH + 2] = '\0';
+    writeString(outputFile, barLine);
 
     for (size_t i = 0; i < (TITLE_MESSAGE_LENGTH - length) / 2; i++)
         writeChar(outputFile, ' ');
     writeLine(outputFile, message);
 
-    for (size_t i = 0; i < TITLE_MESSAGE_LENGTH; i++)
-        writeChar(outputFile, '=');
-    writeChar(outputFile, '\n');
-    writeChar(outputFile, '\n');
+    barLine[TITLE_MESSAGE_LENGTH + 2] = '\n';
+    barLine[TITLE_MESSAGE_LENGTH + 3] = '\0';
+    writeString(outputFile, barLine);
+
+    free(barLine);
 }
 
 //-----------------------------------------------------------------------------
@@ -194,133 +344,4 @@ void sort(string* strIndex, size_t numberOfLines, File* outputFile,
 
     writeTitleMessage(outputFile, message);
     printStringBuffer(outputFile, strIndex, numberOfLines);
-}
-
-//-----------------------------------------------------------------------------
-//! Main dialog. If printOriginal == 0, then doesn't print original raw novel,
-//! otherwise prints it.
-//!
-//! @param [in]  printOriginal
-//-----------------------------------------------------------------------------
-void dialogMain(bool printOriginal)
-{
-    char* inputFileName  = (char*) calloc(MAX_LINE_LENGTH, sizeof(char));
-    char* outputFileName = (char*) calloc(MAX_LINE_LENGTH, sizeof(char));
-
-    requestTwoFilenames("\n~What file do you want to clean?\n", "\n~Into what file to write output?\n",
-                        INPUT_DEFAULT_FILENAME,                 OUTPUT_DEFAULT_FILENAME,
-                        &inputFileName,                         &outputFileName);
-
-    File* inputFile  = openFile(inputFileName,  'r');
-    File* outputFile = openFile(outputFileName, 'w');
-    assert(inputFile  != NULL);
-    assert(outputFile != NULL);
-
-    struct stat inputFileStat;
-    stat((char*)inputFileName, &inputFileStat);
-    size_t inputFileSize = (size_t) inputFileStat.st_size;
-
-    unsigned char* inputFileBuffer = (unsigned char*) calloc(inputFileSize, sizeof(unsigned char));
-    unsigned char* stringBuffer    = (unsigned char*) calloc(inputFileSize, sizeof(unsigned char));
-    assert(readBufferFromFile(inputFile, sizeof(unsigned char), inputFileSize, inputFileBuffer) != FILE_END);
-    assert(inputFileBuffer != NULL && stringBuffer != NULL);
-
-    closeFile(inputFile);
-    if (inputFileName  != INPUT_DEFAULT_FILENAME)
-        free(inputFileName);
-
-    // printing original novel
-    if (printOriginal)
-    {
-        writeTitleMessage(outputFile, "Original novel");
-        writeBufferToFile(outputFile, sizeof(char), inputFileSize, inputFileBuffer);
-    }
-
-    size_t stringBufferSize = cleanNovel         (inputFileBuffer, inputFileSize, stringBuffer);
-    size_t numberOfLines    = strNumOfOccurrences((const char*) stringBuffer, '\n');
-
-    // initializing strIndex
-    string* strIndex = (string*) calloc(numberOfLines, sizeof(string));
-    assert(strIndex != NULL);
-    initializeStrIndex(strIndex, stringBuffer, stringBufferSize);
-
-    writeTitleMessage(outputFile, "Cleaned novel");
-    printStringBuffer(outputFile, strIndex, numberOfLines);
-
-    sort(strIndex, numberOfLines, outputFile, 
-        (int (*)(const void*, const void*)) &strCmpForSortAlphabetically, 
-         "Alphabetically sorted novel", 0);
-    sort(strIndex, numberOfLines, outputFile, 
-        (int (*)(const void*, const void*)) &strCmpForSortReversely, 
-         "Reversely sorted novel", 1);
-
-    closeFile(outputFile);
-
-    consoleWriteFormatted("\nEverything has been successfully generated!\n");
-
-    if (outputFileName != OUTPUT_DEFAULT_FILENAME)
-        free(outputFileName);
-}
-
-//-----------------------------------------------------------------------------
-//! Starts the 'user interface'
-//-----------------------------------------------------------------------------
-void dialogStart()
-{
-    consoleWriteFormatted("\n=================================================\n");
-    consoleWriteFormatted("             What do you want to do?             \n");
-    consoleWriteFormatted("  [0] generate an alphabetically and a reversly  \n");
-    consoleWriteFormatted("      sorted novels                              \n");
-    consoleWriteFormatted("  [1] generate an alphabetically and a reversly  \n");
-    consoleWriteFormatted("      sorted novels + print the original novel   \n");
-    consoleWriteFormatted("  [2] test program                               \n");
-    consoleWriteFormatted("  [3] EXIT                                       \n");
-    consoleWriteFormatted("=================================================\n");
-    consoleWriteFormatted("=================================================\n\n");
-
-    char mode = getOption('0', '3');
-    switch(mode)
-    {
-        case '0':
-            dialogMain(0);
-        break;
-
-        case '1':
-            dialogMain(1);
-        break;
-
-        case '2':
-            testAll();
-            dialogStart();
-        break;
-
-        case '3':
-            return;
-        break;
-
-        default:
-            return;
-        break;
-    }
-}
-
-//-----------------------------------------------------------------------------
-//! main function of the program.
-//-----------------------------------------------------------------------------
-int main(int argc, char* argv[])
-{
-    setlocale(LC_ALL, "Russian");
-
-    int testingMode = 0;
-
-    for (size_t i = 0; i < argc; i++)
-        if (strCompare((const unsigned char*)argv[i], (const unsigned char*)"-t") == 0)
-            testingMode = 1;
-
-    if (testingMode)
-        testAll();
-    else
-        dialogStart();
-
-    return 0;
 }
